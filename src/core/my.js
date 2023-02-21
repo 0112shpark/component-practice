@@ -49,3 +49,32 @@ export function createRouter(routes) {
     routeRender(routes);
   };
 }
+
+/// Store (data 저장소)
+
+export class Store {
+  constructor(state) {
+    this.state = {};
+    this.observers = {};
+    for (const key in state) {
+      Object.defineProperty(this.state, key, {
+        get: () => {
+          return state[key]; //state['message']
+        },
+        set: (val) => {
+          state[key] = val;
+          this.observers[key].forEach((observer) => observer(val));
+        },
+      });
+    }
+  }
+  subscribe(key, cb) {
+    // { message : [()=>{}, ()=>{},...]
+    Array.isArray(this.observers[key])
+      ? //배열데이터면 push를 사용해 뒤에 붙임
+        this.observers[key].push(cb)
+      : // 배열데이터가 아니면 callback함수를 배열의 0번째로 넣어
+        // observers[key]의 속성에 대입
+        (this.observers[key] = [cb]);
+  }
+}

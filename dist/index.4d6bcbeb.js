@@ -587,6 +587,8 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Component", ()=>Component);
 parcelHelpers.export(exports, "createRouter", ()=>createRouter);
+/// Store (data 저장소)
+parcelHelpers.export(exports, "Store", ()=>Store);
 class Component {
     constructor(payload = {}){
         const { tagName ="div" , state ={}  } = payload;
@@ -625,6 +627,28 @@ function createRouter(routes) {
         });
         routeRender(routes);
     };
+}
+class Store {
+    constructor(state){
+        this.state = {};
+        this.observers = {};
+        for(const key in state)Object.defineProperty(this.state, key, {
+            get: ()=>{
+                return state[key]; //state['message']
+            },
+            set: (val)=>{
+                state[key] = val;
+                this.observers[key].forEach((observer)=>observer(val));
+            }
+        });
+    }
+    subscribe(key, cb) {
+        // { message : [()=>{}, ()=>{},...]
+        Array.isArray(this.observers[key]) ? this.observers[key].push(cb) : // observers[key]의 속성에 대입
+        this.observers[key] = [
+            cb
+        ];
+    }
 }
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
@@ -699,15 +723,94 @@ exports.default = (0, _my.createRouter)([
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _my = require("../core/my");
+var _textField = require("../components/TextField");
+var _textFieldDefault = parcelHelpers.interopDefault(_textField);
+var _message = require("../components/Message");
+var _messageDefault = parcelHelpers.interopDefault(_message);
+var _title = require("../components/Title");
+var _titleDefault = parcelHelpers.interopDefault(_title);
 class Home extends (0, _my.Component) {
     render() {
         this.el.innerHTML = /*html*/ `
     <h1>Home Page<h1>`;
+        this.el.append(new (0, _textFieldDefault.default)().el, new (0, _messageDefault.default)().el, new (0, _titleDefault.default)().el);
     }
 }
 exports.default = Home;
 
-},{"../core/my":"5lCFu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gdB30":[function(require,module,exports) {
+},{"../core/my":"5lCFu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../components/TextField":"e6IWT","../components/Message":"i84kQ","../components/Title":"6wotK"}],"e6IWT":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _my = require("../core/my");
+var _message = require("../store/message");
+var _messageDefault = parcelHelpers.interopDefault(_message);
+class TextField extends (0, _my.Component) {
+    render() {
+        //getter 함수 in class Store
+        this.el.innerHTML = /* html*/ `
+    <input value="${(0, _messageDefault.default).state.message}"/>
+    `;
+        //setter 함수 in class Store
+        const inputEl = this.el.querySelector("input");
+        inputEl.addEventListener("input", ()=>{
+            (0, _messageDefault.default).state.message = inputEl.value;
+        });
+    }
+}
+exports.default = TextField;
+
+},{"../core/my":"5lCFu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../store/message":"4gYOO"}],"4gYOO":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _my = require("../core/my");
+exports.default = new (0, _my.Store)({
+    message: "Hello~"
+});
+
+},{"../core/my":"5lCFu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i84kQ":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _my = require("../core/my");
+var _message = require("../store/message");
+var _messageDefault = parcelHelpers.interopDefault(_message);
+class Message extends (0, _my.Component) {
+    constructor(){
+        super();
+        (0, _messageDefault.default).subscribe("message", ()=>{
+            this.render();
+        });
+    }
+    render() {
+        this.el.innerHTML = /*html*/ `
+    <h2>${(0, _messageDefault.default).state.message}</h2>
+    `;
+    }
+}
+exports.default = Message;
+
+},{"../core/my":"5lCFu","../store/message":"4gYOO","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6wotK":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _my = require("../core/my");
+var _message = require("../store/message");
+var _messageDefault = parcelHelpers.interopDefault(_message);
+class Title extends (0, _my.Component) {
+    constructor(){
+        super({
+            tagName: "h1"
+        });
+        (0, _messageDefault.default).subscribe("message", (newVal)=>{
+            console.log("newVal:", newVal);
+            this.render();
+        });
+    }
+    render() {
+        this.el.textContent = `Title: ${(0, _messageDefault.default).state.message}`;
+    }
+}
+exports.default = Title;
+
+},{"../core/my":"5lCFu","../store/message":"4gYOO","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gdB30":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _my = require("../core/my");
